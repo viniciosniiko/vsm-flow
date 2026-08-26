@@ -1,0 +1,66 @@
+.flow-node-options {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.flow-node-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 6px 28px 6px 9px;
+    border: 1px solid rgba(148, 163, 184, .12);
+    border-radius: 9px;
+    color: #cbd5e1;
+    font-size: 11px;
+    background: rgba(15, 23, 42, .55);
+}
+
+.flow-node-option.is-connected {
+    border-color: rgba(16, 185, 129, .28);
+    background: rgba(16, 185, 129, .06);
+}
+
+.option-output-port {
+    position: absolute;
+    top: 50%;
+    right: -8px;
+    z-index: 10;
+    width: 15px;
+    height: 15px;
+    padding: 0;
+    border: 3px solid #0a0f1d;
+    border-radius: 999px;
+    cursor: crosshair;
+    background: var(--primary);
+    transform: translateY(-50%);
+    transition: .16s ease;
+}
+
+.option-output-port:hover,
+.option-output-port.is-connecting {
+    background: #f59e0b;
+    box-shadow: 0 0 0 7px rgba(245, 158, 11, .14);
+}
+
+.option-editor-card {
+    display: grid;
+    gap: 6px;
+}
+
+.option-connection-status {
+    margin-left: 32px;
+    color: #fca5a5;
+    font-size: 10px;
+}
+
+.option-connection-status.is-connected {
+    color: #86efac;
+}
+
+.flow-node:has(.flow-node-options) {
+    padding-bottom: 14px;
+}

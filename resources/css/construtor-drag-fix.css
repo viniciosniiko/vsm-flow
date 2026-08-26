@@ -1,0 +1,28 @@
+
+.flow-node {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.flow-node:active,
+body.is-dragging-node .flow-node {
+    cursor: grabbing;
+}
+
+.flow-node.connection-mode:not(:has(.is-connecting)) {
+    cursor: crosshair;
+}
+
+.flow-node-port.output {
+    z-index: 8;
+    pointer-events: auto;
+}
+
+.connections-layer {
+    pointer-events: none;
+}
+
+.connection-path {
+    pointer-events: stroke;
+}
