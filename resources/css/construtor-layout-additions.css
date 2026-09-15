@@ -4,14 +4,32 @@
     text-align: center;
 }
 
+/* =====================================================
+   CONEXÕES DO MAPA
+   ===================================================== */
+
 .connections-layer {
     position: absolute;
-    inset: 0;
+
+    top: 0;
+    left: 0;
+
     z-index: 2;
-    width: 6000px;
-    height: 4000px;
+
+    /*
+     * Área de desenho do SVG.
+     * Isso NÃO limita o movimento da câmera.
+     */
+    width: 10000px;
+    height: 10000px;
+
     overflow: visible;
+
     pointer-events: none;
+
+    transform-origin: 0 0;
+
+    will-change: transform;
 }
 
 .connection-path {
@@ -20,6 +38,7 @@
     stroke-width: 3;
     stroke-linecap: round;
     filter: drop-shadow(0 0 4px rgba(124, 58, 237, .5));
+
     pointer-events: stroke;
     cursor: pointer;
 }
@@ -28,6 +47,10 @@
     stroke: #ef4444;
     stroke-width: 5;
 }
+
+/* =====================================================
+   BLOCOS
+   ===================================================== */
 
 .flow-nodes {
     z-index: 3;
@@ -69,6 +92,10 @@
     white-space: nowrap;
 }
 
+/* =====================================================
+   PORTAS / CONEXÕES
+   ===================================================== */
+
 .flow-node-port.output {
     display: block;
     border: 3px solid #0a0f1d;
@@ -79,6 +106,10 @@
     background: #f59e0b;
     box-shadow: 0 0 0 7px rgba(245, 158, 11, .16);
 }
+
+/* =====================================================
+   PREVIEW
+   ===================================================== */
 
 .whatsapp-input input {
     flex: 1;
@@ -96,6 +127,18 @@
     margin-left: auto;
     border-top-right-radius: 2px;
     background: #d9fdd3;
+}
+
+/* =====================================================
+   CURSOR DO MAPA
+   ===================================================== */
+
+.canvas-area {
+    cursor: grab;
+}
+
+.canvas-area.is-panning {
+    cursor: grabbing;
 }
 
 .canvas-area.is-panning .canvas-grid,

@@ -40,6 +40,9 @@ export function iniciarConstrutor() {
         zoom: 100,
         nextId: 1,
         simulationCurrentId: null,
+		// posição da câmera no mapa infinito
+		cameraX: 0,
+		cameraY: 0,
     };
 
     state.nextId = Math.max(0, ...state.blocks.map((block) => Number(block.id) || 0)) + 1;
@@ -305,8 +308,8 @@ export function iniciarConstrutor() {
             if (distance > 4) moved = true;
 
             const scale = state.zoom / 100;
-            block.x = Math.max(0, originalX + (event.clientX - startX) / scale);
-            block.y = Math.max(0, originalY + (event.clientY - startY) / scale);
+			block.x = originalX + (event.clientX - startX) / scale;
+			block.y = originalY + (event.clientY - startY) / scale;
 
             node.style.left = `${block.x}px`;
             node.style.top = `${block.y}px`;
@@ -715,13 +718,11 @@ export function iniciarConstrutor() {
         }
     });
 
-    const updateZoom = () => {
-        app.querySelector('[data-zoom-label]').textContent = `${state.zoom}%`;
-        nodesContainer.style.transform = `scale(${state.zoom / 100})`;
-        nodesContainer.style.transformOrigin = 'top left';
-        requestAnimationFrame(renderConnections);
-    };
+	const updateZoom = () => {
+		app.querySelector('[data-zoom-label]').textContent = `${state.zoom}%`;
 
+		applyCamera();
+	};
     app.querySelector('[data-action="zoom-in"]')?.addEventListener('click', () => {
         state.zoom = Math.min(150, state.zoom + 10);
         updateZoom();
@@ -732,98 +733,98 @@ export function iniciarConstrutor() {
         updateZoom();
     });
 
-    app.querySelector('[data-action="center"]')?.addEventListener('click', () => {
-        state.zoom = 100;
-        updateZoom();
-        canvas.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-    });
+	app.querySelector('[data-action="center"]')?.addEventListener('click', () => {
 
-	// ======================================================
-	// NAVEGAÇÃO DO CANVAS - ESTILO MIRO
-	// ======================================================
+		state.zoom = 100;
 
-	let isPanning = false;
-	let panStartX = 0;
-	let panStartY = 0;
-	let panStartScrollLeft = 0;
-	let panStartScrollTop = 0;
+		state.cameraX = canvas.clientWidth / 2;
+		state.cameraY = canvas.clientHeight / 2;
 
-	const stopPanning = (event = null) => {
-		if (!isPanning) return;
-
-		isPanning = false;
-		canvas.classList.remove('is-panning');
-
-		if (
-			event &&
-			canvas.hasPointerCapture &&
-			canvas.hasPointerCapture(event.pointerId)
-		) {
-			canvas.releasePointerCapture(event.pointerId);
-		}
-	};
-
-	canvas.addEventListener('pointerdown', (event) => {
-
-		// Somente botão esquerdo
-		if (event.button !== 0) return;
-
-		// Se clicar em bloco ou controle, NÃO move o canvas
-		if (
-			event.target.closest(
-				'[data-node-id], ' +
-				'[data-default-output], ' +
-				'[data-option-output], ' +
-				'button, input, textarea, select, a'
-			)
-		) {
-			return;
-		}
-
-		isPanning = true;
-
-		panStartX = event.clientX;
-		panStartY = event.clientY;
-
-		panStartScrollLeft = canvas.scrollLeft;
-		panStartScrollTop = canvas.scrollTop;
-
-		canvas.classList.add('is-panning');
-
-		if (canvas.setPointerCapture) {
-			canvas.setPointerCapture(event.pointerId);
-		}
-
-		event.preventDefault();
+		updateZoom();
 	});
 
-	canvas.addEventListener('pointermove', (event) => {
+// ======================================================
+// MAPA INFINITO / CÂMERA - ESTILO MIRO
+// ======================================================
 
-		if (!isPanning) return;
+let isPanning = false;
+let panStartX = 0;
+let panStartY = 0;
+let cameraStartX = 0;
+let cameraStartY = 0;
 
-		const deltaX = event.clientX - panStartX;
-		const deltaY = event.clientY - panStartY;
+const applyCamera = () => {
+    const scale = state.zoom / 100;
 
-		canvas.scrollLeft = panStartScrollLeft - deltaX;
-		canvas.scrollTop = panStartScrollTop - deltaY;
-	});
+    nodesContainer.style.transform =
+        `translate(${state.cameraX}px, ${state.cameraY}px) scale(${scale})`;
 
-	canvas.addEventListener('pointerup', stopPanning);
-	canvas.addEventListener('pointercancel', stopPanning);
+    nodesContainer.style.transformOrigin = '0 0';
 
-	// SHIFT + SCROLL = movimento horizontal
-	canvas.addEventListener(
-		'wheel',
-		(event) => {
+    if (connectionLayer) {
+        connectionLayer.style.transform =
+            `translate(${state.cameraX}px, ${state.cameraY}px) scale(${scale})`;
 
-			if (!event.shiftKey) return;
+        connectionLayer.style.transformOrigin = '0 0';
+    }
 
-			event.preventDefault();
+    // Grid acompanha a câmera
+    canvas.style.backgroundPosition =
+        `${state.cameraX}px ${state.cameraY}px`;
 
-			canvas.scrollLeft += event.deltaY || event.deltaX;
-		},
-		{ passive: false }
-	);
+    requestAnimationFrame(renderConnections);
+};
+
+const stopPanning = () => {
+    if (!isPanning) return;
+
+    isPanning = false;
+    canvas.classList.remove('is-panning');
+};
+
+canvas.addEventListener('pointerdown', (event) => {
+
+    if (event.button !== 0) return;
+
+    // Não mover mapa ao clicar em blocos/controles
+    if (
+        event.target.closest(
+            '[data-node-id], ' +
+            '[data-default-output], ' +
+            '[data-option-output], ' +
+            'button, input, textarea, select, a'
+        )
+    ) {
+        return;
+    }
+
+    isPanning = true;
+
+    panStartX = event.clientX;
+    panStartY = event.clientY;
+
+    cameraStartX = state.cameraX;
+    cameraStartY = state.cameraY;
+
+    canvas.classList.add('is-panning');
+
+    event.preventDefault();
+});
+
+window.addEventListener('pointermove', (event) => {
+
+    if (!isPanning) return;
+
+    state.cameraX =
+        cameraStartX + (event.clientX - panStartX);
+
+    state.cameraY =
+        cameraStartY + (event.clientY - panStartY);
+
+    applyCamera();
+});
+
+window.addEventListener('pointerup', stopPanning);
 	
 	
     canvas.addEventListener('scroll', () => requestAnimationFrame(renderConnections));
