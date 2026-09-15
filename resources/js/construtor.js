@@ -738,6 +738,94 @@ export function iniciarConstrutor() {
         canvas.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     });
 
+	// ======================================================
+	// NAVEGAÇÃO DO CANVAS - ESTILO MIRO
+	// ======================================================
+
+	let isPanning = false;
+	let panStartX = 0;
+	let panStartY = 0;
+	let panStartScrollLeft = 0;
+	let panStartScrollTop = 0;
+
+	const stopPanning = (event = null) => {
+		if (!isPanning) return;
+
+		isPanning = false;
+		canvas.classList.remove('is-panning');
+
+		if (
+			event &&
+			canvas.hasPointerCapture &&
+			canvas.hasPointerCapture(event.pointerId)
+		) {
+			canvas.releasePointerCapture(event.pointerId);
+		}
+	};
+
+	canvas.addEventListener('pointerdown', (event) => {
+
+		// Somente botão esquerdo
+		if (event.button !== 0) return;
+
+		// Se clicar em bloco ou controle, NÃO move o canvas
+		if (
+			event.target.closest(
+				'[data-node-id], ' +
+				'[data-default-output], ' +
+				'[data-option-output], ' +
+				'button, input, textarea, select, a'
+			)
+		) {
+			return;
+		}
+
+		isPanning = true;
+
+		panStartX = event.clientX;
+		panStartY = event.clientY;
+
+		panStartScrollLeft = canvas.scrollLeft;
+		panStartScrollTop = canvas.scrollTop;
+
+		canvas.classList.add('is-panning');
+
+		if (canvas.setPointerCapture) {
+			canvas.setPointerCapture(event.pointerId);
+		}
+
+		event.preventDefault();
+	});
+
+	canvas.addEventListener('pointermove', (event) => {
+
+		if (!isPanning) return;
+
+		const deltaX = event.clientX - panStartX;
+		const deltaY = event.clientY - panStartY;
+
+		canvas.scrollLeft = panStartScrollLeft - deltaX;
+		canvas.scrollTop = panStartScrollTop - deltaY;
+	});
+
+	canvas.addEventListener('pointerup', stopPanning);
+	canvas.addEventListener('pointercancel', stopPanning);
+
+	// SHIFT + SCROLL = movimento horizontal
+	canvas.addEventListener(
+		'wheel',
+		(event) => {
+
+			if (!event.shiftKey) return;
+
+			event.preventDefault();
+
+			canvas.scrollLeft += event.deltaY || event.deltaX;
+		},
+		{ passive: false }
+	);
+	
+	
     canvas.addEventListener('scroll', () => requestAnimationFrame(renderConnections));
     window.addEventListener('resize', () => requestAnimationFrame(renderConnections));
 

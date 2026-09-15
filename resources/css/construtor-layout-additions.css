@@ -8,8 +8,8 @@
     position: absolute;
     inset: 0;
     z-index: 2;
-    width: 1800px;
-    height: 1200px;
+    width: 6000px;
+    height: 4000px;
     overflow: visible;
     pointer-events: none;
 }
@@ -96,4 +96,13 @@
     margin-left: auto;
     border-top-right-radius: 2px;
     background: #d9fdd3;
+}
+
+.canvas-area.is-panning .canvas-grid,
+.canvas-area.is-panning .canvas-empty {
+    cursor: grabbing;
+}
+
+.canvas-area .flow-node {
+    cursor: pointer;
 }
